@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Release Notes Dashboard</title>
+    <meta name="description" content="View, search, filter, and share the latest Google Cloud BigQuery release notes.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-house/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Lucide Icons (Using CDN for modern web icons) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Background glow elements for rich aesthetics -->
+    <div class="glow-bg glow-1"></div>
+    <div class="glow-bg glow-2"></div>
+    <div class="glow-bg glow-3"></div>
+
+    <header class="app-header" id="app-header">
+        <div class="container header-container">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i data-lucide="database" class="logo-icon"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>BigQuery Releases</h1>
+                    <p>Live Update Dashboard</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button id="refresh-btn" class="btn btn-primary" title="Refresh Release Notes">
+                    <i data-lucide="refresh-cw" class="icon-refresh"></i>
+                    <span>Refresh Feed</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        <!-- Dashboard Stats Section -->
+        <section class="stats-grid" id="stats-section">
+            <div class="stat-card glass" id="stat-total">
+                <div class="stat-icon-wrapper purple">
+                    <i data-lucide="activity"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Total Updates</span>
+                    <h2 class="stat-value" id="count-total">0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass" id="stat-features">
+                <div class="stat-icon-wrapper green">
+                    <i data-lucide="sparkles"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Features</span>
+                    <h2 class="stat-value" id="count-features">0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass" id="stat-changes">
+                <div class="stat-icon-wrapper orange">
+                    <i data-lucide="sliders"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Changes</span>
+                    <h2 class="stat-value" id="count-changes">0</h2>
+                </div>
+            </div>
+            <div class="stat-card glass" id="stat-others">
+                <div class="stat-icon-wrapper blue">
+                    <i data-lucide="info"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Others</span>
+                    <h2 class="stat-value" id="count-others">0</h2>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search and Filters Section -->
+        <section class="controls-panel glass" id="controls-panel">
+            <div class="search-wrapper">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" id="search-input" placeholder="Search release notes by keywords..." aria-label="Search release notes">
+                <button id="clear-search-btn" class="clear-btn" style="display: none;" title="Clear search">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="filters-wrapper">
+                <button class="filter-chip active" data-type="all" id="filter-all">All Updates</button>
+                <button class="filter-chip" data-type="feature" id="filter-features">Features</button>
+                <button class="filter-chip" data-type="change" id="filter-changes">Changes</button>
+                <button class="filter-chip" data-type="deprecation" id="filter-deprecations">Deprecations</button>
+            </div>
+        </section>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="loading-state">
+            <div class="spinner"></div>
+            <p>Fetching latest release notes from Google Cloud...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="error-state glass" style="display: none;">
+            <i data-lucide="alert-triangle" class="error-icon"></i>
+            <h3>Failed to load release notes</h3>
+            <p id="error-message">Something went wrong while connecting to the feed. Please try again later.</p>
+            <button id="retry-btn" class="btn btn-secondary">
+                <i data-lucide="rotate-ccw"></i> Retry
+            </button>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="empty-state glass" style="display: none;">
+            <i data-lucide="folder-open" class="empty-icon"></i>
+            <h3>No results found</h3>
+            <p>No release notes match your current search and filter criteria.</p>
+        </div>
+
+        <!-- Feed Content -->
+        <section id="feed-container" class="feed-container">
+            <!-- Appended dynamically by JS -->
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="container footer-container">
+            <p>&copy; 2026 BigQuery Release Notes Dashboard. Built with Python Flask &amp; Vanilla Web Technologies.</p>
+            <p class="footer-source">
+                Data source: <a href="https://docs.cloud.google.com/feeds/bigquery-release-notes.xml" target="_blank" rel="noopener noreferrer">GCP Atom Feed <i data-lucide="external-link" class="inline-icon"></i></a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Tweet Sharing Modal -->
+    <div class="modal-backdrop" id="tweet-modal" style="display: none;">
+        <div class="modal glass animate-slide-up">
+            <div class="modal-header">
+                <div class="modal-title-wrapper">
+                    <i data-lucide="twitter" class="modal-title-icon"></i>
+                    <h2>Share Update on X</h2>
+                </div>
+                <button class="close-modal-btn" id="close-modal-btn" title="Close dialog">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-instructions">Customize your post before sharing it to X (Twitter). The link to the release notes will be automatically appended.</p>
+                
+                <div class="tweet-preview-container">
+                    <div class="tweet-user-profile">
+                        <div class="tweet-avatar">BQ</div>
+                        <div class="tweet-user-meta">
+                            <span class="tweet-display-name">BigQuery Updates</span>
+                            <span class="tweet-handle">@bq_releases</span>
+                        </div>
+                    </div>
+                    
+                    <div class="tweet-textarea-wrapper">
+                        <textarea id="tweet-textarea" rows="5" maxlength="280" placeholder="What would you like to share?"></textarea>
+                    </div>
+                    
+                    <div class="tweet-character-bar">
+                        <span id="char-counter">0 / 280</span>
+                        <div class="progress-ring-container">
+                            <div class="progress-bar-fill" id="char-progress"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" id="copy-tweet-btn">
+                    <i data-lucide="copy"></i> Copy Text
+                </button>
+                <button class="btn btn-primary" id="post-tweet-btn">
+                    <i data-lucide="send"></i> Post on X
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification for copies -->
+    <div id="toast" class="toast glass" style="display: none;">
+        <i data-lucide="check-circle" class="toast-icon"></i>
+        <span id="toast-message">Copied to clipboard!</span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
