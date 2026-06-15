@@ -15,6 +15,7 @@ const errorState = document.getElementById('error-state');
 const errorMessage = document.getElementById('error-message');
 const emptyState = document.getElementById('empty-state');
 const retryBtn = document.getElementById('retry-btn');
+const clearAllBtn = document.getElementById('clear-all-btn');
 const appHeader = document.getElementById('app-header');
 
 // Stats Elements
@@ -69,6 +70,21 @@ function setupEventListeners() {
         currentSearch = '';
         clearSearchBtn.style.display = 'none';
         searchInput.focus();
+        renderFeed();
+    });
+    
+    clearAllBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        currentSearch = '';
+        clearSearchBtn.style.display = 'none';
+        currentFilter = 'all';
+        filterChips.forEach(chip => {
+            if (chip.getAttribute('data-type') === 'all') {
+                chip.classList.add('active');
+            } else {
+                chip.classList.remove('active');
+            }
+        });
         renderFeed();
     });
     
